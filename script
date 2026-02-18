@@ -223,3 +223,141 @@ UserInputService.InputBegan:Connect(function(input, gameProcessedEvent)
         end
     end
 end)
+
+-------------------------------------------------------------------------------
+-- Block for: Bread Collector (Reworked Auto Pickup Money)
+-------------------------------------------------------------------------------
+
+local Collector_Enabled = false
+local Collector_Signal = nil
+local Collector_Task = nil
+
+local function Collector_CoreLogic()
+	local RS_S = game:GetService("RunService")
+	local RS_Rep = game:GetService("ReplicatedStorage")
+	local WS = game:GetService("Workspace")
+
+	local function RunCollectorLogic()
+		if not Collector_Enabled or Settings.IsDead then return end
+
+		local breadContainer = WS.Filter:FindFirstChild("SpawnedBread")
+		local pickupRemote = RS_Rep.Events:FindFirstChild("CZDPZUS")
+
+		if not breadContainer then
+			warn("BreadCollector: SpawnedBread folder missing. Pausing pickup logic.")
+			return
+		end
+		if not pickupRemote then
+			warn("BreadCollector: Pickup RemoteEvent missing. Pausing pickup logic.")
+			return
+		end
+
+		local p_char = localPlayer.Character
+		local root_part = p_char and p_char:FindFirstChild("HumanoidRootPart")
+
+		if not root_part or CoolDowns.AutoPickUps.MoneyCooldown then return end
+
+		local current_pos = root_part.Position
+		for _, item in ipairs(breadContainer:GetChildren()) do
+			local dist_sq = (current_pos - item.Position).Magnitude^2
+			if dist_sq < 25 and not CoolDowns.AutoPickUps.MoneyCooldown then
+				CoolDowns.AutoPickUps.MoneyCooldown = true
+				
+				pcall(function()
+					pickupRemote:FireServer(item)
+				end)
+				
+				task.wait(1.1)
+				
+				CoolDowns.AutoPickUps.MoneyCooldown = false
+				break
+			end
+		end
+	end
+
+	Collector_Signal = RS_S.RenderStepped:Connect(RunCollectorLogic)
+end
+
+local function Collector_Activate()
+	if Collector_Enabled then return end
+	Collector_Enabled = true
+
+	if Collector_Signal then
+		Collector_Signal:Disconnect()
+		Collector_Signal = nil
+	end
+	if Collector_Task then
+		coroutine.close(Collector_Task)
+		Collector_Task = nil
+	end
+
+	Collector_CoreLogic()
+end
+
+local function Collector_Deactivate()
+	if not Collector_Enabled then return end
+	Collector_Enabled = false
+
+	if Collector_Signal then
+		Collector_Signal:Disconnect()
+		Collector_Signal = nil
+	end
+
+	if CoolDowns and CoolDowns.AutoPickUps then
+		CoolDowns.AutoPickUps.MoneyCooldown = false
+	end
+end
+
+-- Main function to enable the autofarm and invisibility
+local function Autofarm_Enable()
+	if autofarmEnabled then return end
+	autofarmEnabled = true
+	
+	_G.ActivateShadow() -- Użycie nowej nazwy
+	Collector_Activate() -- Użycie nowej nazwy
+	--Noclip_Enable() -- Włącz Noclip
+end
+
+-- Main function to disable the autofarm and invisibility
+local function Autofarm_Disable()
+	if not autofarmEnabled then return end
+	autofarmEnabled = false
+	
+	_G.DeactivateShadow() -- Użycie nowej nazwy
+	Collector_Deactivate() -- Użycie nowej nazwy
+	--Noclip_Disable() -- Wyłącz Noclip
+end
+
+-- NOWA, WZMOCNIONA LOGIKA RESPONSU
+task.spawn(function()
+	local deathRespawnEvent = services.rs_rep:WaitForChild("Events"):WaitForChild("DeathRespawn")
+	while task.wait() do
+		local char = localPlayer.Character
+		if char then
+			local humanoid = char:FindFirstChildOfClass("Humanoid")
+			if humanoid and humanoid.Health <= 0 and autofarmEnabled then
+				deathRespawnEvent:InvokeServer("KMG4R904")
+				task.wait(2) -- Dłuższe oczekiwanie na pełny respawn
+			end
+		end
+	end
+end)
+
+
+-- Handle character respawn and script resume
+localPlayer.CharacterAdded:Connect(function(character)
+	if not autofarmEnabled then
+		return
+	end
+
+	-- Dłuższe oczekiwanie na pełne załadowanie postaci i elementów gry
+	character:WaitForChild("HumanoidRootPart", 5)
+	task.wait(1.5)
+
+	-- TWARDY RESET STANU LOKALNEGO
+	autofarmCooldown = false
+	ignoredSafes = {}
+	
+	-- Wymuś ponowną aktywację, aby zsynchronizować stan ze skryptami
+	Autofarm_Enable()
+end)

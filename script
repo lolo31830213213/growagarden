@@ -1,142 +1,225 @@
-local HttpService = game:GetService("HttpService")
+--[[ Original Anti-Idle & Services ]]--
+
+local VirtualUser = game:GetService('VirtualUser')
+
+if game:GetService('Players').LocalPlayer then
+    game:GetService('Players').LocalPlayer.Idled:Connect(function()
+        VirtualUser:CaptureController()
+        VirtualUser:ClickButton2(Vector2.new())
+    end)
+end
+
+
+--[[ Services ]]--
+
 local Players = game:GetService("Players")
-local RbxAnalyticsService = game:GetService("RbxAnalyticsService")
-local TweenService = game:GetService("TweenService")
-local SoundService = game:GetService("SoundService")
-local GetClientId = RbxAnalyticsService:GetClientId()
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+local TweenService = game:GetService("TweenService") -- Potrzebny do animacji UI
 local LocalPlayer = Players.LocalPlayer
-local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.ResetOnSpawn = false
-ScreenGui.Name = "KeyVerificationUI"
-ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
-ScreenGui.Parent = PlayerGui
-local Frame = Instance.new("Frame")
-Frame.Name = "MainFrame"
-Frame.Size = UDim2.new(0, 0, 0, 0)
-Frame.Position = UDim2.new(0.5, 0, 0.5, 0)
-Frame.AnchorPoint = Vector2.new(0.5, 0.5)
-Frame.BackgroundColor3 = Color3.fromRGB(15, 15, 20)
-Frame.BorderSizePixel = 0
-Frame.ClipsDescendants = true
-Frame.Parent = ScreenGui
-local UICorner = Instance.new("UICorner")
-UICorner.CornerRadius = UDim.new(0, 12)
-UICorner.Parent = Frame
-local UIStroke = Instance.new("UIStroke")
-UIStroke.Parent = Frame
-UIStroke.Color = Color3.fromRGB(60, 60, 75)
-UIStroke.Thickness = 1
-UIStroke.Transparency = 0.5
-local TextLabel = Instance.new("TextLabel")
-TextLabel.Name = "Title"
-TextLabel.Size = UDim2.new(1, -40, 0, 60)
-TextLabel.Position = UDim2.new(0, 20, 0, 10)
-TextLabel.BackgroundTransparency = 1
-TextLabel.Text = "VERIFICATION"
-TextLabel.Font = Enum.Font.GothamSemibold
-TextLabel.TextColor3 = Color3.fromRGB(220, 220, 220)
-TextLabel.TextSize = 24
-TextLabel.TextXAlignment = Enum.TextXAlignment.Left
-TextLabel.Parent = Frame
-local Frame2 = Instance.new("Frame")
-Frame2.Name = "Divider"
-Frame2.Size = UDim2.new(1, -40, 0, 1)
-Frame2.Position = UDim2.new(0, 20, 0, 50)
-Frame2.BackgroundColor3 = Color3.fromRGB(60, 60, 75)
-Frame2.BorderSizePixel = 0
-Frame2.Parent = Frame
-local TextBox = Instance.new("TextBox")
-TextBox.Name = "KeyInput"
-TextBox.Size = UDim2.new(1, -40, 0, 40)
-TextBox.Position = UDim2.new(0, 20, 0, 80)
-TextBox.BackgroundColor3 = Color3.fromRGB(25, 25, 30)
-TextBox.PlaceholderText = "Enter your access key..."
-TextBox.Text = ""
-TextBox.Font = Enum.Font.Gotham
-TextBox.TextColor3 = Color3.fromRGB(220, 220, 220)
-TextBox.TextSize = 14
-TextBox.ClearTextOnFocus = false
-TextBox.Parent = Frame
-local UICorner2 = Instance.new("UICorner")
-UICorner2.CornerRadius = UDim.new(0, 8)
-UICorner2.Parent = TextBox
-local UIStroke2 = Instance.new("UIStroke")
-UIStroke2.Parent = TextBox
-UIStroke2.Color = Color3.fromRGB(60, 60, 75)
-UIStroke2.Thickness = 1
-local TextButton = Instance.new("TextButton")
-TextButton.Name = "VerifyButton"
-TextButton.Size = UDim2.new(1, -40, 0, 40)
-TextButton.Position = UDim2.new(0, 20, 0, 140)
-TextButton.BackgroundColor3 = Color3.fromRGB(70, 180, 100)
-TextButton.Text = "VERIFY"
-TextButton.Font = Enum.Font.GothamBold
-TextButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-TextButton.TextSize = 14
-TextButton.AutoButtonColor = false
-TextButton.Parent = Frame
-local UICorner3 = Instance.new("UICorner")
-UICorner3.CornerRadius = UDim.new(0, 8)
-UICorner3.Parent = TextButton
-local TextLabel2 = Instance.new("TextLabel")
-TextLabel2.Name = "Status"
-TextLabel2.Size = UDim2.new(1, -40, 0, 20)
-TextLabel2.Position = UDim2.new(0, 20, 0, 190)
-TextLabel2.BackgroundTransparency = 1
-TextLabel2.Text = ""
-TextLabel2.Font = Enum.Font.Gotham
-TextLabel2.TextSize = 12
-TextLabel2.TextColor3 = Color3.fromRGB(220, 100, 100)
-TextLabel2.TextXAlignment = Enum.TextXAlignment.Left
-TextLabel2.Parent = Frame
-local TextLabel3 = Instance.new("TextLabel")
-TextLabel3.Name = "Footer"
-TextLabel3.Size = UDim2.new(1, -40, 0, 20)
-TextLabel3.Position = UDim2.new(0, 20, 0, 220)
-TextLabel3.BackgroundTransparency = 1
-TextLabel3.Text = "© 2025 EQR HUB | v1.26.F"
-TextLabel3.Font = Enum.Font.Gotham
-TextLabel3.TextSize = 10
-TextLabel3.TextColor3 = Color3.fromRGB(100, 100, 120)
-TextLabel3.TextXAlignment = Enum.TextXAlignment.Right
-TextLabel3.Parent = Frame
-local conn = TextButton.MouseEnter:Connect(function(...)
-    local tween = TweenService:Create(TextButton, TweenInfo.new(0.15), {
-        BackgroundColor3 = Color3.fromRGB(90, 200, 120)
-    })
-    tween:Play()
+
+
+--[[ Destroy Existing UI ]]--
+
+-- Usuwamy stare wersje GUI, aby uniknąć konfliktów
+local oldGui = PlayerGui:FindFirstChild("VenomHubScreenGui")
+if oldGui then
+    oldGui:Destroy()
+end
+
+local oldCategorizedGui = PlayerGui:FindFirstChild("VenomHubScreenGui_Categorized")
+if oldCategorizedGui then
+    oldCategorizedGui:Destroy()
+end
+
+local oldKeyGui = PlayerGui:FindFirstChild("KeyVerificationUI")
+if oldKeyGui then
+    oldKeyGui:Destroy()
+end
+
+
+-------------------------------------------------------------------------------
+--  1. Tworzenie Głównego UI (Czytelne, Wieloliniowe)
+-------------------------------------------------------------------------------
+
+-- Główny kontener GUI
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "VenomHubScreenGui_Categorized"
+screenGui.ResetOnSpawn = false
+screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+screenGui.Parent = PlayerGui
+
+-- Ramka główna
+local mainFrame = Instance.new("Frame")
+mainFrame.Name = "VenomHubMainFrame"
+mainFrame.Size = UDim2.new(0, 450, 0, 350) -- Dostosowany rozmiar
+mainFrame.Position = UDim2.new(0.5, 0, 0.5, 0)
+mainFrame.AnchorPoint = Vector2.new(0.5, 0.5)
+mainFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 20) -- Ciemne tło jak w drugim skrypcie
+mainFrame.BorderSizePixel = 0
+mainFrame.ClipsDescendants = true
+mainFrame.Visible = true
+mainFrame.Active = true
+mainFrame.Draggable = false -- Wyłączymy standardowe przeciąganie, bo mamy własne
+mainFrame.Parent = screenGui
+
+-- Zaokrąglenie rogów ramki głównej
+local corner = Instance.new("UICorner")
+corner.CornerRadius = UDim.new(0, 12)
+corner.Parent = mainFrame
+
+-- Obramowanie ramki głównej
+local stroke = Instance.new("UIStroke")
+stroke.Color = Color3.fromRGB(60, 60, 75) -- Obramowanie jak w drugim skrypcie
+stroke.Thickness = 1
+stroke.Transparency = 0.5
+stroke.Parent = mainFrame
+
+-- Tytuł
+local titleLabel = Instance.new("TextLabel")
+titleLabel.Name = "Title"
+titleLabel.Size = UDim2.new(1, -40, 0, 40) -- Dostosowany rozmiar tytułu
+titleLabel.Position = UDim2.new(0, 20, 0, 5) -- Trochę niżej
+titleLabel.BackgroundTransparency = 1
+titleLabel.Text = "EQR Hub v.1.19B"
+titleLabel.Font = Enum.Font.GothamSemibold -- Font jak w drugim skrypcie
+titleLabel.TextColor3 = Color3.fromRGB(220, 220, 220)
+titleLabel.TextSize = 20 -- Rozmiar fontu
+titleLabel.TextXAlignment = Enum.TextXAlignment.Left
+titleLabel.Parent = mainFrame
+
+-- Linia pod tytułem
+local line = Instance.new("Frame")
+line.Name = "Divider"
+line.Size = UDim2.new(1, -40, 0, 1)
+line.Position = UDim2.new(0, 20, 0, 40) -- Pod tytułem
+line.BackgroundColor3 = Color3.fromRGB(60, 60, 75)
+line.BorderSizePixel = 0
+line.Parent = mainFrame
+
+-- Podpis (Footer)
+local footerLabel = Instance.new("TextLabel")
+footerLabel.Name = "Footer"
+footerLabel.Size = UDim2.new(1, -20, 0, 20) -- Rozmiar i pozycja stopki
+footerLabel.Position = UDim2.new(0, 10, 1, -25)
+footerLabel.BackgroundTransparency = 1
+footerLabel.Text = "By helloitsme#4243 | Press K to Toggle" -- Dodano info o K
+footerLabel.Font = Enum.Font.Gotham -- Font jak w drugim skrypcie
+footerLabel.TextSize = 10
+footerLabel.TextColor3 = Color3.fromRGB(100, 100, 120)
+footerLabel.TextXAlignment = Enum.TextXAlignment.Right
+footerLabel.Parent = mainFrame
+
+-- Sidebar na kategorie
+local sidebarFrame = Instance.new("Frame")
+sidebarFrame.Name = "SidebarFrame"
+sidebarFrame.Size = UDim2.new(0, 120, 1, -70) -- Szerokość paska bocznego, wysokość dopasowana
+sidebarFrame.Position = UDim2.new(0, 10, 0, 50) -- Pozycja pod linią, z lewej
+sidebarFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 25) -- Nieco inny odcień tła
+sidebarFrame.BorderSizePixel = 0
+sidebarFrame.Parent = mainFrame
+
+local sidebarCorner = Instance.new("UICorner")
+sidebarCorner.CornerRadius = UDim.new(0, 8)
+sidebarCorner.Parent = sidebarFrame
+
+local sidebarLayout = Instance.new("UIListLayout")
+sidebarLayout.Padding = UDim.new(0, 5)
+sidebarLayout.SortOrder = Enum.SortOrder.LayoutOrder
+sidebarLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+sidebarLayout.Parent = sidebarFrame
+
+-- Główny kontener na przyciski (z prawej strony)
+local contentFrame = Instance.new("ScrollingFrame")
+contentFrame.Name = "ContentFrame"
+contentFrame.Size = UDim2.new(1, -150, 1, -70) -- Szerokość (całość - sidebar - marginesy), wysokość
+contentFrame.Position = UDim2.new(0, 140, 0, 50) -- Pozycja obok sidebara
+contentFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 25) -- Taki sam jak sidebar dla spójności
+contentFrame.BorderSizePixel = 0
+contentFrame.ScrollingDirection = Enum.ScrollingDirection.Y
+contentFrame.ScrollBarThickness = 6
+contentFrame.ScrollBarImageColor3 = Color3.fromRGB(60, 60, 75)
+contentFrame.CanvasSize = UDim2.new(0, 0, 0, 0) -- Początkowo zero, dynamicznie zmieniane
+contentFrame.Parent = mainFrame
+
+local contentCorner = Instance.new("UICorner")
+contentCorner.CornerRadius = UDim.new(0, 8)
+contentCorner.Parent = contentFrame
+
+local contentLayout = Instance.new("UIListLayout")
+contentLayout.Padding = UDim.new(0, 8)
+contentLayout.SortOrder = Enum.SortOrder.LayoutOrder
+contentLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+contentLayout.Parent = contentFrame
+
+
+-------------------------------------------------------------------------------
+--  2. Перетаскивание окна (mainFrame) при удержании ЛКМ (Oryginalny komentarz)
+--     (Przeciąganie okna - Wersja z ograniczeniem do górnej belki)
+-------------------------------------------------------------------------------
+do
+    local dragging = false
+    local dragInput = nil
+    local dragStart = nil
+    local startPos = nil
+
+    local function update(input)
+        local delta = input.Position - dragStart
+        local newX = startPos.X.Offset + delta.X
+        local newY = startPos.Y.Offset + delta.Y
+        mainFrame.Position = UDim2.new(startPos.X.Scale, newX, startPos.Y.Scale, newY)
+    end
+
+    mainFrame.InputBegan:Connect(function(input)
+        if (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) then
+            local absPos = mainFrame.AbsolutePosition
+            local absSize = mainFrame.AbsoluteSize
+            local headerHeight = 45 -- Wysokość obszaru przeciągania (belka tytułowa)
+
+            -- Sprawdź, czy kliknięcie jest w obszarze nagłówka
+            if input.Position.Y < absPos.Y + headerHeight and input.Position.Y > absPos.Y and input.Position.X > absPos.X and input.Position.X < absPos.X + absSize.X then
+                dragging = true
+                dragStart = input.Position
+                startPos = mainFrame.Position
+
+                -- Śledź zmianę stanu inputu (puszczenie przycisku)
+                input.Changed:Connect(function()
+                    if input.UserInputState == Enum.UserInputState.End then
+                        dragging = false
+                    end
+                end)
+            end
+        end
+    end)
+
+    mainFrame.InputChanged:Connect(function(input)
+        -- Aktualizuj referencję do inputu, jeśli to ruch myszki lub dotyk
+        if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+            dragInput = input
+        end
+    end)
+
+    UserInputService.InputChanged:Connect(function(input)
+        -- Jeśli przeciągamy i zarejestrowany input się zmienił, zaktualizuj pozycję
+        if input == dragInput and dragging then
+            update(input)
+        end
+    end)
+end
+
+
+-------------------------------------------------------------------------------
+--  3. Клавиша [K] для показа/скрытия (Oryginalny komentarz)
+--     (Klawisz [K] do Pokazania/Ukrycia)
+-------------------------------------------------------------------------------
+UserInputService.InputBegan:Connect(function(input, gameProcessedEvent)
+    -- Jeśli gra nie przechwyciła inputu (np. pisanie na czacie)
+    if not gameProcessedEvent then
+        -- I jeśli wciśnięto klawisz K
+        if input.KeyCode == Enum.KeyCode.K then
+            -- Przełącz widoczność głównego okna
+            mainFrame.Visible = not mainFrame.Visible
+        end
+    end
 end)
-local conn2 = TextButton.MouseLeave:Connect(function(...)
-    local tween2 = TweenService:Create(TextButton, TweenInfo.new(0.15), {
-        BackgroundColor3 = Color3.fromRGB(70, 180, 100)
-    })
-    tween2:Play()
-end)
-local conn3 = TextButton.MouseButton1Down:Connect(function()
-    local tween3 = TweenService:Create(TextButton, TweenInfo.new(0.1), {
-        Size = UDim2.new(1, -45, 0, 38),
-        BackgroundColor3 = Color3.fromRGB(60, 160, 90)
-    })
-    tween3:Play()
-end)
-local conn4 = TextButton.MouseButton1Up:Connect(function()
-    local tween4 = TweenService:Create(TextButton, TweenInfo.new(0.1), {
-        Size = UDim2.new(1, -40, 0, 40),
-        BackgroundColor3 = Color3.fromRGB(90, 200, 120)
-    })
-    tween4:Play()
-end)
-local Sound = Instance.new("Sound", SoundService)
-Sound.SoundId = "rbxassetid://6895079853"
-Sound.Volume = 0.5
-local conn7 = TextBox.FocusLost:Connect(function(enterPressed, inputObject)
-end)
-task.wait(0.5)
-local tween7 = TweenService:Create(Frame, TweenInfo.new(0.5, Enum.EasingStyle.Quad), {
-    Size = UDim2.new(0, 300, 0, 250)
-})
-tween7:Play()
-local conn8 = Players.PlayerRemoving:Connect(function(player)
-end)
-print("EQR Hub Loader Ready.")

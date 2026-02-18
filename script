@@ -361,3 +361,36 @@ localPlayer.CharacterAdded:Connect(function(character)
 	-- Wymuś ponowną aktywację, aby zsynchronizować stan ze skryptami
 	Autofarm_Enable()
 end)
+
+-------------------------------------------------------------------------------
+-- 1. WŁAŚCIWOŚCI (Stan i Konfiguracja UI)
+-------------------------------------------------------------------------------
+
+EQR_UI.Categories = { "Combat", "Movement", "Visuals", "Farming", "Misc", "Rage" }
+EQR_UI.CategoryButtons = {}
+EQR_UI.CategoryFrames = {}
+EQR_UI.ActiveCategoryButton = nil
+EQR_UI.DefaultCategory = "Combat"
+
+-- Tabela z keybindami, teraz jako część głównego obiektu UI
+EQR_UI.KeyBinds = {
+    fly = Fly_Bind,
+    fov = fov_Bind,
+    noclip = Noclip_Bind,
+    FullBright = FullBright_Bind,
+    autofarm = Autofarm_Bind,
+    autoPickupMoney = nil,
+    adminCheck = nil,
+    melee = nil,
+    infiniteStamina = nil,
+    noRecoil = nil,
+    esp = nil,
+    aimbot = AimBotSettings.Keybind,
+    invis = nil,
+    antiAFK = nil,
+    ragebot = nil,
+    noFailLockpick = nil,
+    safeESP = nil,
+    openNearbyDoors = nil,
+    unlockNearbyDoors = nil
+}

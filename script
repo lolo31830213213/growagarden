@@ -1,91 +1,92 @@
-local UserInputService = game:GetService("UserInputService")
-local Players = game:GetService("Players")
-local LocalPlayer = Players.LocalPlayer
-local Mouse = LocalPlayer:GetMouse()
-local RunService = game:GetService("RunService")
+-- Create a new screen to hold the GUI
+local gui = Instance.new("ScreenGui")
+gui.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
 
-local aimbotEnabled = true -- Pour activer/désactiver l'AimBot
+-- Create a container frame
+local frame = Instance.new("Frame")
+frame.Size = UDim2.new(0.3, 0, 0.15, 0)
+frame.Position = UDim2.new(0.35, 0, 0.4, 0)
+frame.BackgroundColor3 = Color3.fromRGB(46, 46, 46)
+frame.Parent = gui
 
--- Fonction pour trouver la cible la plus proche
-function getClosestTarget()
-    local closestTarget = nil
-    local closestDistance = math.huge
-    
-    for _, v in pairs(game:GetService("Workspace").CriminalSpawns:GetChildren()) do -- Remplace "CriminalSpawns" par le nom correct de la catégorie des PNJ que vous souhaitez cibler
-        if v:FindFirstChild("Humanoid") and v.Humanoid.Health > 0 then
-            local character = v.Parent
-            local humanoidRootPart = character:FindFirstChild("HumanoidRootPart")
-            
-            if humanoidRootPart then
-                local distance = (humanoidRootPart.Position - LocalPlayer.Character.HumanoidRootPart.Position).magnitude
-                
-                if distance < closestDistance then
-                    closestTarget = v
-                    closestDistance = distance
-                end
-            end
-        end
-    end
-    
-    return closestTarget, closestDistance
-end
+-- Create a title label
+local titleLabel = Instance.new("TextLabel")
+titleLabel.Text = "Combat"
+titleLabel.Size = UDim2.new(1, -20, 0.25, 0)
+titleLabel.Position = UDim2.new(0, 10, 0, 0)
+titleLabel.BackgroundColor3 = Color3.fromRGB(74, 74, 74)
+titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+titleLabel.Font = Enum.Font.SourceSansBold
+titleLabel.Parent = frame
 
--- Fonction pour le AimBot
-function aimbot()
-    local target, _ = getClosestTarget()
-    
-    if target and target:FindFirstChild("HumanoidRootPart") then
-        local humanoidRootPart = target.HumanoidRootPart
-        
-        -- Calculer la direction et appliquer l'aimation
-        local lookVector = (humanoidRootPart.Position - LocalPlayer.Character.HumanoidRootPart.Position).unit
-        local aimAngle = math.atan2(lookVector.Z, lookVector.X)
-        
-        Mouse.LookVector = CFrame.Angles(0, aimAngle, 0).LookVector
-        
-        -- Pour l'aimbot sur les écrans en diagonale (pour la rotation de la souris)
-        local screenPosition = Mouse.Hit.p
-        local currentMouseX, currentMouseY = Mouse.Position.X, Mouse.Position.Y
-        
-        local deltaX = screenPosition.X - LocalPlayer.Character.HumanoidRootPart.Position.X
-        local deltaY = screenPosition.Y - LocalPlayer.Character.HumanoidRootPart.Position.Z
-        
-        local angleX = math.atan2(deltaY, deltaX)
-        
-        -- Déplacer la souris pour simuler l'aimbot sur les écrans en diagonale
-        UserInputService:SetMouseMode(Enum.UserInputState.Locked)
-        UserInputService.MouseBehavior = Enum.MouseBehavior.ConstrainedNoDrag
-        
-        -- Appliquer les déplacements de la souris
-        local deltaX, deltaY = (angleX - math.pi / 2) * 50, 0 -- Ajustez ces valeurs pour obtenir le bon comportement de l'aimbot
-        
-        UserInputService.MouseDelta = Vector2.new(deltaX, deltaY)
-    end
-end
+-- Create an AimBot toggle button
+local aimbotToggle = Instance.new("TextButton")
+aimbotToggle.Text = "AimBot"
+aimbotToggle.Size = UDim2.new(1, -20, 0.35, 0)
+aimbotToggle.Position = UDim2.new(0, 10, 0.25, 0)
+aimbotToggle.BackgroundColor3 = Color3.fromRGB(74, 74, 74)
+aimbotToggle.TextColor3 = Color3.fromRGB(255, 255, 255)
+aimbotToggle.Parent = frame
 
--- Boucle principale du AimBot
-RunService.RenderStepped:Connect(function()
+-- Create a No Recoil toggle button
+local noRecoilToggle = Instance.new("TextButton")
+noRecoilToggle.Text = "No Recoil"
+noRecoilToggle.Size = UDim2.new(1, -20, 0.35, 0)
+noRecoilToggle.Position = UDim2.new(0, 10, 0.6, 0)
+noRecoilToggle.BackgroundColor3 = Color3.fromRGB(74, 74, 74)
+noRecoilToggle.TextColor3 = Color3.fromRGB(255, 255, 255)
+noRecoilToggle.Parent = frame
+
+-- Function to toggle AimBot
+local function toggleAimbot()
     if aimbotEnabled then
-        aimbot()
+        print("AimBot disabled")
+        UserInputService.MouseDelta = Vector2.new(0, 0)
+    else
+        print("AimBot enabled")
     end
-end)
-
--- Fonction pour désactiver l'AimBot en appuyant sur une touche (par exemple, la barre d'espace)
-UserInputService.InputBegan:Connect(function(input, gameProcessedEvent)
-    if input.KeyCode == Enum.KeyCode.Space and not gameProcessedEvent then
-        aimbotEnabled = not aimbotEnabled
-        print("AimBot " .. (aimbotEnabled and "enabled" or "disabled"))
-    end
-end)
-
--- Fonction pour désactiver le recoil
-function disableRecoil()
-    if UserInputService:IsKeyDown(Enum.KeyCode.R) then
-        LocalPlayer.Character:WaitForChild("Humanoid"):ChangeState(Enum.HumanoidStateType.Freefall)
-    end
+    aimbotEnabled = not aimbotEnabled
 end
 
--- Boucle principale du No Recoil
-game:GetService("RunService").RenderStepped:Connect(function()
-    disableRecoil()
-end)
+-- Function to toggle No Recoil
+local function toggleNoRecoil()
+    if noRecoilActive then
+        print("No Recoil disabled")
+    else
+        print("No Recoil enabled")
+    end
+    noRecoilActive = not noRecoilActive
+end
+
+-- Connect the toggle buttons to their respective functions
+aimbotToggle.MouseButton1Click:Connect(toggleAimbot)
+noRecoilToggle.MouseButton1Click:Connect(toggleNoRecoil)
+
+-- Initialize AimBot and No Recoil states
+local aimbotEnabled = false
+local noRecoilActive = false
+
+-- Function for AimBot logic
+local function aimbot()
+    if aimbotEnabled then
+        local target, _ = getClosestTarget()
+        
+        if target and target:FindFirstChild("HumanoidRootPart") then
+            local humanoidRootPart = target.HumanoidRootPart
+            
+            local lookVector = (humanoidRootPart.Position - LocalPlayer.Character.HumanoidRootPart.Position).unit
+            local aimAngle = math.atan2(lookVector.Z, lookVector.X)
+            
+            Mouse.LookVector = CFrame.Angles(0, aimAngle, 0).LookVector
+            
+            local screenPosition = Mouse.Hit.p
+            local currentMouseX, currentMouseY = Mouse.Position.X, Mouse.Position.Y
+            
+            local deltaX = screenPosition.X - LocalPlayer.Character.HumanoidRootPart.Position.X
+            local deltaY = screenPosition.Y - LocalPlayer.Character.HumanoidRootPart.Position.Z
+            
+            local angleX = math.atan2(deltaY, deltaX)
+            
+            UserInputService.MouseDelta = Vector2.new((angleX - math.pi / 2) * 50, 0)
+        end
+end

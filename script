@@ -45,21 +45,43 @@ local function resetCheatAttributes(player)
     player:SetAttribute("IsInvisible", nil)
 end
 
--- Créer une nouvelle partie pour le joueur
-Players.PlayerAdded:Connect(function(player)
-    -- Créer un input box pour entrer la clé
-    local inputBox = Instance.new("TextBox")
-    inputBox.Parent = player.PlayerGui.ScreenGui
-    inputBox.PlaceholderText = "Enter key..."
-    inputBox.Size = UDim2.new(0.5, 0, 0.1, 0)
-    inputBox.Position = UDim2.new(0.25, 0, 0.45, 0)
+-- Créer un menu pour accéder aux options
+local function createMenu()
+    local screenGui = Instance.new("ScreenGui")
+    screenGui.Parent = game.Players.LocalPlayer.PlayerGui
     
-    -- Créer un bouton pour vérifier la clé
+    -- Menu principal
+    local mainFrame = Instance.new("Frame")
+    mainFrame.Size = UDim2.new(0.3, 0, 0.2, 0)
+    mainFrame.Position = UDim2.new(0.35, 0, 0.4, 0)
+    mainFrame.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    mainFrame.Parent = screenGui
+    
+    -- Titre du menu
+    local title = Instance.new("TextLabel")
+    title.Text = "Cheat Menu"
+    title.Size = UDim2.new(1, 0, 0.3, 0)
+    title.Position = UDim2.new(0, 0, 0, 0)
+    title.BackgroundColor3 = Color3.fromRGB(0, 0, 255)
+    title.TextColor3 = Color3.fromRGB(255, 255, 255)
+    title.Font = Enum.Font.SourceSansBold
+    title.Parent = mainFrame
+    
+    -- Input box pour entrer la clé
+    local inputBox = Instance.new("TextBox")
+    inputBox.Size = UDim2.new(1, -20, 0.3, 0)
+    inputBox.Position = UDim2.new(0, 10, 0.4, 0)
+    inputBox.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    inputBox.PlaceholderText = "Enter key..."
+    inputBox.Parent = mainFrame
+    
+    -- Bouton pour vérifier la clé
     local verifyButton = Instance.new("TextButton")
-    verifyButton.Parent = player.PlayerGui.ScreenGui
     verifyButton.Text = "Verify"
-    verifyButton.Size = UDim2.new(0.3, 0, 0.1, 0)
-    verifyButton.Position = UDim2.new(0.35, 0, 0.55, 0)
+    verifyButton.Size = UDim2.new(1, -20, 0.3, 0)
+    verifyButton.Position = UDim2.new(0, 10, 0.8, 0)
+    verifyButton.BackgroundColor3 = Color3.fromRGB(0, 255, 0)
+    verifyButton.Parent = mainFrame
     
     -- Fonction pour gérer les entrées
     local function onInputChanged(text)
@@ -74,18 +96,21 @@ Players.PlayerAdded:Connect(function(player)
     local function onButtonClicked()
         local key = inputBox.Text
         if key ~= "" then
-            verifyKey(player, key)
+            verifyKey(game.Players.LocalPlayer, key)
         else
-            sendWebhookMessage(player.Name .. " tried to verify an empty key.")
+            sendWebhookMessage("LocalPlayer tried to verify an empty key.")
         end
     end
     
     -- Connecter les fonctions aux événements d'entrée et de clic
     inputBox.Changed:Connect(onInputChanged)
     verifyButton.MouseButton1Click:Connect(onButtonClicked)
-    
-    -- Réinitialiser les attributs de cheat si le joueur quitte le jeu
-    player.CharacterAdded:Connect(function(character)
-        resetCheatAttributes(player)
-    end)
+end
+
+-- Créer le menu au démarrage du jeu
+createMenu()
+
+-- Réinitialiser les attributs de cheat si le joueur quitte le jeu
+Players.LocalPlayer.CharacterAdded:Connect(function(character)
+    resetCheatAttributes(Players.LocalPlayer)
 end)

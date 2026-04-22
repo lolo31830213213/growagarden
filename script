@@ -1,1 +1,91 @@
-local UIS=game:GetService("UserInputService") local plr=game.Players.LocalPlayer local template=game:GetService("ReplicatedStorage"):WaitForChild("Storage"):WaitForChild("ScrapStuff") UIS.InputBegan:Connect(function(i,g) if g then return end if i.KeyCode==Enum.KeyCode.E then local char=plr.Character if not char then return end local hrp=char:FindFirstChild("HumanoidRootPart") if not hrp then return end for _,v in pairs(workspace:GetDescendants()) do if v.Name==template.Name then local part=v:IsA("Model") and v:FindFirstChildWhichIsA("BasePart") or v if part and (hrp.Position-part.Position).Magnitude<=15 then v:Destroy() print("SCRAP PRIS") end end end end end)
+local UserInputService = game:GetService("UserInputService")
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local Mouse = LocalPlayer:GetMouse()
+local RunService = game:GetService("RunService")
+
+local aimbotEnabled = true -- Pour activer/désactiver l'AimBot
+
+-- Fonction pour trouver la cible la plus proche
+function getClosestTarget()
+    local closestTarget = nil
+    local closestDistance = math.huge
+    
+    for _, v in pairs(game:GetService("Workspace").CriminalSpawns:GetChildren()) do -- Remplace "CriminalSpawns" par le nom correct de la catégorie des PNJ que vous souhaitez cibler
+        if v:FindFirstChild("Humanoid") and v.Humanoid.Health > 0 then
+            local character = v.Parent
+            local humanoidRootPart = character:FindFirstChild("HumanoidRootPart")
+            
+            if humanoidRootPart then
+                local distance = (humanoidRootPart.Position - LocalPlayer.Character.HumanoidRootPart.Position).magnitude
+                
+                if distance < closestDistance then
+                    closestTarget = v
+                    closestDistance = distance
+                end
+            end
+        end
+    end
+    
+    return closestTarget, closestDistance
+end
+
+-- Fonction pour le AimBot
+function aimbot()
+    local target, _ = getClosestTarget()
+    
+    if target and target:FindFirstChild("HumanoidRootPart") then
+        local humanoidRootPart = target.HumanoidRootPart
+        
+        -- Calculer la direction et appliquer l'aimation
+        local lookVector = (humanoidRootPart.Position - LocalPlayer.Character.HumanoidRootPart.Position).unit
+        local aimAngle = math.atan2(lookVector.Z, lookVector.X)
+        
+        Mouse.LookVector = CFrame.Angles(0, aimAngle, 0).LookVector
+        
+        -- Pour l'aimbot sur les écrans en diagonale (pour la rotation de la souris)
+        local screenPosition = Mouse.Hit.p
+        local currentMouseX, currentMouseY = Mouse.Position.X, Mouse.Position.Y
+        
+        local deltaX = screenPosition.X - LocalPlayer.Character.HumanoidRootPart.Position.X
+        local deltaY = screenPosition.Y - LocalPlayer.Character.HumanoidRootPart.Position.Z
+        
+        local angleX = math.atan2(deltaY, deltaX)
+        
+        -- Déplacer la souris pour simuler l'aimbot sur les écrans en diagonale
+        UserInputService:SetMouseMode(Enum.UserInputState.Locked)
+        UserInputService.MouseBehavior = Enum.MouseBehavior.ConstrainedNoDrag
+        
+        -- Appliquer les déplacements de la souris
+        local deltaX, deltaY = (angleX - math.pi / 2) * 50, 0 -- Ajustez ces valeurs pour obtenir le bon comportement de l'aimbot
+        
+        UserInputService.MouseDelta = Vector2.new(deltaX, deltaY)
+    end
+end
+
+-- Boucle principale du AimBot
+RunService.RenderStepped:Connect(function()
+    if aimbotEnabled then
+        aimbot()
+    end
+end)
+
+-- Fonction pour désactiver l'AimBot en appuyant sur une touche (par exemple, la barre d'espace)
+UserInputService.InputBegan:Connect(function(input, gameProcessedEvent)
+    if input.KeyCode == Enum.KeyCode.Space and not gameProcessedEvent then
+        aimbotEnabled = not aimbotEnabled
+        print("AimBot " .. (aimbotEnabled and "enabled" or "disabled"))
+    end
+end)
+
+-- Fonction pour désactiver le recoil
+function disableRecoil()
+    if UserInputService:IsKeyDown(Enum.KeyCode.R) then
+        LocalPlayer.Character:WaitForChild("Humanoid"):ChangeState(Enum.HumanoidStateType.Freefall)
+    end
+end
+
+-- Boucle principale du No Recoil
+game:GetService("RunService").RenderStepped:Connect(function()
+    disableRecoil()
+end)

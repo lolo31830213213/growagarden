@@ -11,7 +11,7 @@ frame.Parent = gui
 
 -- Create a title label
 local titleLabel = Instance.new("TextLabel")
-titleLabel.Text = "Combat"
+titleLabel.Text = "GUIS"
 titleLabel.Size = UDim2.new(1, -20, 0.25, 0)
 titleLabel.Position = UDim2.new(0, 10, 0, 0)
 titleLabel.BackgroundColor3 = Color3.fromRGB(74, 74, 74)
@@ -37,56 +37,93 @@ noRecoilToggle.BackgroundColor3 = Color3.fromRGB(74, 74, 74)
 noRecoilToggle.TextColor3 = Color3.fromRGB(255, 255, 255)
 noRecoilToggle.Parent = frame
 
+-- Create an Invisibility toggle button
+local invisibilityToggle = Instance.new("TextButton")
+invisibilityToggle.Text = "Invisibility"
+invisibilityToggle.Size = UDim2.new(1, -20, 0.35, 0)
+invisibilityToggle.Position = UDim2.new(0, 10, 1.0, -40)
+invisibilityToggle.BackgroundColor3 = Color3.fromRGB(74, 74, 74)
+invisibilityToggle.TextColor3 = Color3.fromRGB(255, 255, 255)
+invisibilityToggle.Parent = frame
+
+-- Create a Staff Detector toggle button
+local staffDetectorToggle = Instance.new("TextButton")
+staffDetectorToggle.Text = "Staff Detector"
+staffDetectorToggle.Size = UDim2.new(1, -20, 0.35, 0)
+staffDetectorToggle.Position = UDim2.new(0, 10, 1.0, -80)
+staffDetectorToggle.BackgroundColor3 = Color3.fromRGB(74, 74, 74)
+staffDetectorToggle.TextColor3 = Color3.fromRGB(255, 255, 255)
+staffDetectorToggle.Parent = frame
+
+-- Initialize AimBot and No Recoil states
+local aimbotEnabled = false
+local noRecoilActive = false
+local invisibilityActive = false
+local staffDetectorActive = false
+
 -- Function to toggle AimBot
 local function toggleAimbot()
+    aimbotEnabled = not aimbotEnabled
     if aimbotEnabled then
+        print("AimBot enabled")
+    else
         print("AimBot disabled")
         UserInputService.MouseDelta = Vector2.new(0, 0)
-    else
-        print("AimBot enabled")
     end
-    aimbotEnabled = not aimbotEnabled
 end
 
 -- Function to toggle No Recoil
 local function toggleNoRecoil()
-    if noRecoilActive then
-        print("No Recoil disabled")
-    else
-        print("No Recoil enabled")
-    end
     noRecoilActive = not noRecoilActive
+    if noRecoilActive then
+        print("No Recoil enabled")
+    else
+        print("No Recoil disabled")
+    end
+end
+
+-- Function to toggle Invisibility
+local function toggleInvisibility()
+    invisibilityActive = not invisibilityActive
+    if invisibilityActive then
+        print("Invisibility enabled")
+        game.Players.LocalPlayer.Character.Head.Transparency = 1
+        game.Players.LocalPlayer.Character.UpperTorso.Transparency = 0.5
+        game.Players.LocalPlayer.Character.LowerTorso.Transparency = 0.5
+        game.Players.LocalPlayer.Character.RightUpperArm.Transparency = 0.5
+        game.Players.LocalPlayer.Character.LeftUpperArm.Transparency = 0.5
+        game.Players.LocalPlayer.Character.RightLowerArm.Transparency = 0.5
+        game.Players.LocalPlayer.Character.LeftLowerArm.Transparency = 0.5
+        game.Players.LocalPlayer.Character.RightHand.Transparency = 1
+        game.Players.LocalPlayer.Character.LeftHand.Transparency = 1
+    else
+        print("Invisibility disabled")
+        game.Players.LocalPlayer.Character.Head.Transparency = 0
+        game.Players.LocalPlayer.Character.UpperTorso.Transparency = 0
+        game.Players.LocalPlayer.Character.LowerTorso.Transparency = 0
+        game.Players.LocalPlayer.Character.RightUpperArm.Transparency = 0
+        game.Players.LocalPlayer.Character.LeftUpperArm.Transparency = 0
+        game.Players.LocalPlayer.Character.RightLowerArm.Transparency = 0
+        game.Players.LocalPlayer.Character.LeftLowerArm.Transparency = 0
+        game.Players.LocalPlayer.Character.RightHand.Transparency = 0
+        game.Players.LocalPlayer.Character.LeftHand.Transparency = 0
+    end
+end
+
+-- Function to toggle Staff Detector
+local function toggleStaffDetector()
+    staffDetectorActive = not staffDetectorActive
+    if staffDetectorActive then
+        print("Staff Detector enabled")
+        -- Add code here to detect staff members
+    else
+        print("Staff Detector disabled")
+        -- Remove code here to detect staff members
+    end
 end
 
 -- Connect the toggle buttons to their respective functions
 aimbotToggle.MouseButton1Click:Connect(toggleAimbot)
 noRecoilToggle.MouseButton1Click:Connect(toggleNoRecoil)
-
--- Initialize AimBot and No Recoil states
-local aimbotEnabled = false
-local noRecoilActive = false
-
--- Function for AimBot logic
-local function aimbot()
-    if aimbotEnabled then
-        local target, _ = getClosestTarget()
-        
-        if target and target:FindFirstChild("HumanoidRootPart") then
-            local humanoidRootPart = target.HumanoidRootPart
-            
-            local lookVector = (humanoidRootPart.Position - LocalPlayer.Character.HumanoidRootPart.Position).unit
-            local aimAngle = math.atan2(lookVector.Z, lookVector.X)
-            
-            Mouse.LookVector = CFrame.Angles(0, aimAngle, 0).LookVector
-            
-            local screenPosition = Mouse.Hit.p
-            local currentMouseX, currentMouseY = Mouse.Position.X, Mouse.Position.Y
-            
-            local deltaX = screenPosition.X - LocalPlayer.Character.HumanoidRootPart.Position.X
-            local deltaY = screenPosition.Y - LocalPlayer.Character.HumanoidRootPart.Position.Z
-            
-            local angleX = math.atan2(deltaY, deltaX)
-            
-            UserInputService.MouseDelta = Vector2.new((angleX - math.pi / 2) * 50, 0)
-        end
-end
+invisibilityToggle.MouseButton1Click:Connect(toggleInvisibility)
+staffDetectorToggle.MouseButton1Click:Connect(toggleStaffDetector)
